@@ -85,52 +85,59 @@ export default function Cart() {
   if (orderResult) {
     const isSuccess = orderResult.status === 'CONFIRMED';
     return (
-      <div className="max-w-lg mx-auto animate-fade-in">
-        <div className={`result-card ${isSuccess ? 'border-2 border-emerald-200' : 'border-2 border-red-200'}`}>
-          <div className={`result-icon ${isSuccess ? 'result-icon-success' : 'result-icon-error'}`}>
+      <div className="cart-container fade-in">
+        <div className="form-card" style={{ maxWidth: '500px', margin: '0 auto', border: isSuccess ? '2px solid #10b981' : '2px solid #ef4444' }}>
+          <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-lg)' }}>
             {isSuccess ? (
-              <CheckCircle className="h-12 w-12 text-emerald-600" />
+              <CheckCircle style={{ width: '64px', height: '64px', color: '#10b981', margin: '0 auto var(--spacing-md)' }} />
             ) : (
-              <XCircle className="h-12 w-12 text-red-600" />
+              <XCircle style={{ width: '64px', height: '64px', color: '#ef4444', margin: '0 auto var(--spacing-md)' }} />
             )}
           </div>
           
-          <h1 className={`result-title ${isSuccess ? 'result-title-success' : 'result-title-error'}`}>
+          <h1 style={{ textAlign: 'center', color: isSuccess ? '#10b981' : '#ef4444' }}>
             {isSuccess ? 'Order Confirmed!' : 'Payment Failed'}
           </h1>
           
-          <p className="result-description">
+          <p style={{ textAlign: 'center', color: 'var(--color-text-light)', marginBottom: 'var(--spacing-lg)' }}>
             {isSuccess
               ? 'Your payment was successful and your order is being processed.'
               : 'Your payment was declined. Your cart items have been restored.'}
           </p>
 
-          <div className="result-summary">
-            <div className="summary-row">
-              <span className="summary-label">Order ID</span>
-              <span className="summary-value">#{orderResult.id}</span>
+          <div className="cart-summary">
+            <div className="cart-summary-row">
+              <span>Order ID</span>
+              <span>#{orderResult.id}</span>
             </div>
-            <div className="summary-row">
-              <span className="summary-label">Status</span>
-              <span className={`badge ${isSuccess ? 'badge-confirmed' : 'badge-failed'}`}>
+            <div className="cart-summary-row">
+              <span>Status</span>
+              <span style={{ 
+                backgroundColor: isSuccess ? '#d1fae5' : '#fee2e2',
+                color: isSuccess ? '#065f46' : '#991b1b',
+                padding: '4px 8px',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '0.75rem',
+                fontWeight: '600'
+              }}>
                 {orderResult.status}
               </span>
             </div>
-            <div className="summary-row">
-              <span className="summary-label">Total</span>
-              <span className="summary-value font-bold text-indigo-600">
+            <div className="cart-summary-row" style={{ borderBottom: 'none' }}>
+              <span>Total</span>
+              <span style={{ fontWeight: '700', color: 'var(--color-accent)', fontSize: '1.125rem' }}>
                 ${parseFloat(orderResult.total_amount).toFixed(2)}
               </span>
             </div>
           </div>
 
-          <div className="result-actions">
-            <Link to="/orders" className="btn btn-primary">
-              <Package className="h-4 w-4 mr-2" />
+          <div style={{ display: 'flex', gap: 'var(--spacing-md)', marginTop: 'var(--spacing-lg)' }}>
+            <Link to="/orders" className="btn btn-primary" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+              <Package style={{ width: '16px', height: '16px' }} />
               View Orders
             </Link>
-            <Link to="/products" className="btn btn-secondary">
-              <ShoppingBag className="h-4 w-4 mr-2" />
+            <Link to="/products" className="btn btn-secondary" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+              <ShoppingBag style={{ width: '16px', height: '16px' }} />
               Continue Shopping
             </Link>
           </div>
@@ -141,12 +148,12 @@ export default function Cart() {
 
   if (cartItems.length === 0) {
     return (
-      <div className="empty-state animate-fade-in">
+      <div className="empty-state fade-in">
         <ShoppingCart className="empty-state-icon" />
         <h2 className="empty-state-title">Your cart is empty</h2>
         <p className="empty-state-description">Add some products to get started</p>
-        <Link to="/products" className="btn btn-primary btn-inline">
-          <ShoppingBag className="h-4 w-4 mr-2" />
+        <Link to="/products" className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+          <ShoppingBag style={{ width: '16px', height: '16px' }} />
           Browse Products
         </Link>
       </div>
@@ -154,50 +161,52 @@ export default function Cart() {
   }
 
   return (
-    <div className="animate-fade-in">
-      <div className="flex items-center justify-between mb-8">
+    <div className="cart-container fade-in">
+      <div className="flex-between mb-lg">
         <div>
-          <h1>Shopping Cart</h1>
-          <p className="text-gray-600 mt-1">{cartItems.length} item(s) in your cart</p>
+          <h1 className="page-title">Shopping Cart</h1>
+          <p className="page-subtitle">{cartItems.length} item(s) in your cart</p>
         </div>
         <button
           onClick={handleClearCart}
-          className="btn btn-ghost btn-sm btn-inline text-red-600 hover:text-red-700 hover:bg-red-50"
+          className="btn btn-secondary btn-small"
           disabled={loading}
+          style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--color-danger)' }}
         >
-          <Trash2 className="h-4 w-4 mr-1.5" />
+          <Trash2 style={{ width: '16px', height: '16px' }} />
           Clear Cart
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 'var(--spacing-lg)' }}>
         {/* Cart Items */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="cart-items">
           {cartItems.map((item) => (
             <div key={item.id} className="cart-item">
               <div className="cart-item-image">
-                <Package className="h-8 w-8 text-indigo-400" />
+                <Package />
               </div>
-              <div className="cart-item-details">
-                <h3 className="cart-item-title">{item.product_name}</h3>
-                <p className="cart-item-meta">
+              <div className="cart-item-info">
+                <h3 className="cart-item-name">{item.product_name}</h3>
+                <p className="cart-item-description">
                   ${parseFloat(item.product_price).toFixed(2)} × {item.quantity}
                 </p>
               </div>
-              <div className="cart-item-actions">
-                <p className="font-semibold text-lg text-indigo-600">
+              <div style={{ textAlign: 'right' }}>
+                <p className="cart-item-price">
                   ${parseFloat(item.subtotal).toFixed(2)}
                 </p>
                 <button
                   onClick={() => handleRemove(item.product_id)}
                   disabled={removing[item.product_id]}
-                  className="text-red-500 hover:text-red-700 text-sm mt-1.5 flex items-center ml-auto transition-colors"
+                  className="btn-icon"
+                  style={{ color: 'var(--color-danger)', marginTop: 'var(--spacing-sm)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                 >
                   {removing[item.product_id] ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} />
                   ) : (
                     <>
-                      <Trash2 className="h-3.5 w-3.5 mr-1" />
+                      <Trash2 style={{ width: '14px', height: '14px' }} />
                       Remove
                     </>
                   )}
@@ -208,47 +217,44 @@ export default function Cart() {
         </div>
 
         {/* Order Summary */}
-        <div className="lg:col-span-1">
-          <div className="summary-card card-body">
-            <h2 className="text-lg font-semibold text-gray-900 mb-5">Order Summary</h2>
-            
-            <div className="space-y-1">
-              <div className="summary-row">
-                <span className="summary-label">Subtotal</span>
-                <span className="summary-value">${parseFloat(cartTotal).toFixed(2)}</span>
-              </div>
-              <div className="summary-row">
-                <span className="summary-label">Shipping</span>
-                <span className="summary-value text-emerald-600">Free</span>
-              </div>
-              <div className="summary-row summary-total">
-                <span className="summary-label">Total</span>
-                <span className="summary-value">${parseFloat(cartTotal).toFixed(2)}</span>
-              </div>
-            </div>
-
-            <button
-              onClick={handleCheckout}
-              disabled={checkingOut || loading}
-              className="btn btn-primary w-full mt-6"
-            >
-              {checkingOut ? (
-                <>
-                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  Checkout
-                  <ArrowRight className="h-5 w-5 ml-2" />
-                </>
-              )}
-            </button>
-
-            <p className="text-xs text-gray-500 text-center mt-4">
-              Payment simulation: 70% success rate
-            </p>
+        <div className="cart-summary">
+          <h2 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: 'var(--spacing-md)' }}>Order Summary</h2>
+          
+          <div className="cart-summary-row">
+            <span>Subtotal</span>
+            <span>${parseFloat(cartTotal).toFixed(2)}</span>
           </div>
+          <div className="cart-summary-row">
+            <span>Shipping</span>
+            <span style={{ color: 'var(--color-success)' }}>Free</span>
+          </div>
+          <div className="cart-summary-total">
+            <span>Total</span>
+            <span>${parseFloat(cartTotal).toFixed(2)}</span>
+          </div>
+
+          <button
+            onClick={handleCheckout}
+            disabled={checkingOut || loading}
+            className="btn btn-primary btn-full"
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+          >
+            {checkingOut ? (
+              <>
+                <Loader2 style={{ width: '20px', height: '20px', animation: 'spin 1s linear infinite' }} />
+                Processing...
+              </>
+            ) : (
+              <>
+                Checkout
+                <ArrowRight style={{ width: '20px', height: '20px' }} />
+              </>
+            )}
+          </button>
+
+          <p style={{ fontSize: '0.75rem', color: 'var(--color-text-light)', textAlign: 'center', marginTop: 'var(--spacing-md)' }}>
+            Payment simulation: 70% success rate
+          </p>
         </div>
       </div>
     </div>

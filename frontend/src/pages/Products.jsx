@@ -78,7 +78,7 @@ export default function Products() {
 
   if (products.length === 0) {
     return (
-      <div className="empty-state animate-fade-in">
+      <div className="empty-state fade-in">
         <Package className="empty-state-icon" />
         <h2 className="empty-state-title">No products available</h2>
         <p className="empty-state-description">Check back later for new products</p>
@@ -87,10 +87,10 @@ export default function Products() {
   }
 
   return (
-    <div className="animate-fade-in">
-      <div className="section-header">
-        <h1>Products</h1>
-        <p className="mt-2 text-gray-600">Browse our collection of {products.length} products</p>
+    <div className="fade-in">
+      <div className="page-header">
+        <h1 className="page-title">Products</h1>
+        <p className="page-subtitle">Browse our collection of {products.length} products</p>
       </div>
 
       <div className="product-grid">
@@ -103,58 +103,57 @@ export default function Products() {
           return (
             <div key={product.id} className="product-card">
               <div className="product-image">
-                <Package className="h-16 w-16 text-indigo-300" />
+                <Package />
               </div>
-              <div className="product-content">
-                <h3 className="product-title">{product.name}</h3>
+              <div className="product-info">
+                <h3 className="product-name">{product.name}</h3>
                 <p className="product-description">
                   {product.description || 'No description available'}
                 </p>
-                <div className="product-footer">
-                  <span className="product-price">
-                    ${parseFloat(product.price).toFixed(2)}
-                  </span>
-                  <span
-                    className={`stock-badge ${
-                      isOutOfStock ? 'stock-out' : isLowStock ? 'stock-low' : 'stock-available'
-                    }`}
-                  >
-                    {isOutOfStock ? (
-                      <span className="flex items-center gap-1">
-                        <AlertCircle className="h-3 w-3" />
-                        Out of stock
-                      </span>
-                    ) : isLowStock ? (
-                      `Only ${stock} left`
-                    ) : (
-                      `${stock} in stock`
-                    )}
-                  </span>
-                </div>
-                <button
-                  onClick={() => handleAddToCart(product.id)}
-                  disabled={isOutOfStock || isAdding}
-                  className={`w-full mt-4 ${
-                    isOutOfStock
-                      ? 'btn btn-secondary opacity-50 cursor-not-allowed'
-                      : 'btn btn-primary'
+              </div>
+              <div className="product-footer">
+                <span className="product-price">
+                  ${parseFloat(product.price).toFixed(2)}
+                </span>
+                <span
+                  className={`product-stock ${
+                    isOutOfStock ? 'product-stock-out' : isLowStock ? 'product-stock-low' : 'product-stock-available'
                   }`}
                 >
-                  {isAdding ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Adding...
-                    </>
-                  ) : isOutOfStock ? (
-                    'Out of Stock'
+                  {isOutOfStock ? (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <AlertCircle style={{ width: '12px', height: '12px' }} />
+                      Out of stock
+                    </span>
+                  ) : isLowStock ? (
+                    `Only ${stock} left`
                   ) : (
-                    <>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add to Cart
-                    </>
+                    `${stock} in stock`
                   )}
-                </button>
+                </span>
               </div>
+              <button
+                onClick={() => handleAddToCart(product.id)}
+                disabled={isOutOfStock || isAdding}
+                className={`btn btn-full mt-md ${
+                  isOutOfStock ? 'btn-secondary' : 'btn-primary'
+                }`}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              >
+                {isAdding ? (
+                  <>
+                    <Loader2 style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} />
+                    Adding...
+                  </>
+                ) : isOutOfStock ? (
+                  'Out of Stock'
+                ) : (
+                  <>
+                    <Plus style={{ width: '16px', height: '16px' }} />
+                    Add to Cart
+                  </>
+                )}
+              </button>
             </div>
           );
         })}

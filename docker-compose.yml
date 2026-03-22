@@ -36,5 +36,17 @@ services:
       - ./app:/app/app
     restart: unless-stopped
 
+  # Frontend Service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: amcart_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - app
+    restart: unless-stopped
+
 volumes:
   postgres_data:

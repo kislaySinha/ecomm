@@ -53,28 +53,28 @@ export default function Register() {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card animate-fade-in">
-        <div className="auth-header">
-          <div className="auth-logo">
-            <div className="bg-indigo-600 p-3 rounded-xl">
-              <Store className="auth-logo-icon text-white" />
+    <div className="form-container">
+      <div className="form-card fade-in">
+        <div className="form-header">
+          <div className="form-logo">
+            <div className="form-logo-icon">
+              <Store />
             </div>
           </div>
-          <h1 className="auth-title">Create account</h1>
-          <p className="auth-subtitle">Join AmCart and start shopping</p>
+          <h1 className="form-title">Create account</h1>
+          <p className="form-subtitle">Join AmCart and start shopping</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="auth-form">
+        <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="form-label">Email address</label>
-            <div className="input-icon-wrapper">
-              <Mail className="input-icon" />
+            <div className="form-input-icon-wrapper">
+              <Mail className="form-input-icon" />
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="input input-with-icon"
+                className="form-input form-input-with-icon"
                 placeholder="you@example.com"
                 disabled={loading}
                 autoComplete="email"
@@ -84,13 +84,13 @@ export default function Register() {
 
           <div className="form-group">
             <label className="form-label">Password</label>
-            <div className="input-icon-wrapper">
-              <Lock className="input-icon" />
+            <div className="form-input-icon-wrapper">
+              <Lock className="form-input-icon" />
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="input input-with-icon"
+                className="form-input form-input-with-icon"
                 placeholder="At least 6 characters"
                 disabled={loading}
                 autoComplete="new-password"
@@ -100,13 +100,13 @@ export default function Register() {
 
           <div className="form-group">
             <label className="form-label">Confirm password</label>
-            <div className="input-icon-wrapper">
-              <Lock className="input-icon" />
+            <div className="form-input-icon-wrapper">
+              <Lock className="form-input-icon" />
               <input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="input input-with-icon"
+                className="form-input form-input-with-icon"
                 placeholder="Confirm your password"
                 disabled={loading}
                 autoComplete="new-password"
@@ -116,26 +116,27 @@ export default function Register() {
 
           <button
             type="submit"
-            className="btn btn-primary w-full mt-2"
+            className="btn btn-primary btn-full mt-md"
             disabled={loading}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
           >
             {loading ? (
               <>
-                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                <Loader2 style={{ width: '20px', height: '20px', animation: 'spin 1s linear infinite' }} />
                 Creating account...
               </>
             ) : (
               <>
-                <UserPlus className="h-5 w-5 mr-2" />
+                <UserPlus style={{ width: '20px', height: '20px' }} />
                 Create account
               </>
             )}
           </button>
         </form>
 
-        <p className="auth-footer">
+        <p className="form-footer">
           Already have an account?{' '}
-          <Link to="/login" className="auth-link">
+          <Link to="/login" className="form-link">
             Sign in
           </Link>
         </p>

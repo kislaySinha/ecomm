@@ -78,7 +78,7 @@ export default function Orders() {
 
   if (orders.length === 0) {
     return (
-      <div className="empty-state animate-fade-in">
+      <div className="empty-state fade-in">
         <Package className="empty-state-icon" />
         <h2 className="empty-state-title">No orders yet</h2>
         <p className="empty-state-description">Your order history will appear here after you make a purchase</p>
@@ -87,13 +87,13 @@ export default function Orders() {
   }
 
   return (
-    <div className="animate-fade-in">
-      <div className="section-header">
-        <h1>Order History</h1>
-        <p className="mt-2 text-gray-600">You have {orders.length} order(s)</p>
+    <div className="fade-in">
+      <div className="page-header">
+        <h1 className="page-title">Order History</h1>
+        <p className="page-subtitle">You have {orders.length} order(s)</p>
       </div>
 
-      <div className="space-y-4">
+      <div>
         {orders.map((order) => {
           const config = statusConfig[order.status] || statusConfig.PENDING;
           const StatusIcon = config.icon;
@@ -107,33 +107,45 @@ export default function Orders() {
                 className="order-header"
                 onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className={`order-status-icon ${config.bgColor}`}>
-                      <StatusIcon className={`h-6 w-6 ${config.color}`} />
+                <div className="flex-between">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)' }}>
+                    <div className="order-status-icon" style={{ 
+                      backgroundColor: config.bgColor === 'bg-emerald-100' ? '#d1fae5' : 
+                                       config.bgColor === 'bg-amber-100' ? '#fef3c7' :
+                                       config.bgColor === 'bg-red-100' ? '#fee2e2' : '#f3f4f6'
+                    }}>
+                      <StatusIcon style={{ 
+                        width: '24px', 
+                        height: '24px',
+                        color: config.color === 'text-emerald-600' ? '#059669' :
+                               config.color === 'text-amber-600' ? '#d97706' :
+                               config.color === 'text-red-600' ? '#dc2626' : '#6b7280'
+                      }} />
                     </div>
                     <div>
-                      <div className="flex items-center gap-3">
-                        <h3 className="font-semibold text-gray-900">Order #{order.id}</h3>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
+                        <h3 style={{ fontWeight: '600', color: 'var(--color-text)' }}>Order #{order.id}</h3>
                         <span className={`badge ${config.badge}`}>{order.status}</span>
                       </div>
-                      <p className="text-sm text-gray-500 mt-0.5">{formatDate(order.created_at)}</p>
+                      <p style={{ fontSize: '0.875rem', color: 'var(--color-text-light)', marginTop: '2px' }}>
+                        {formatDate(order.created_at)}
+                      </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-5">
-                    <div className="text-right">
-                      <p className="font-bold text-lg text-gray-900">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-lg)' }}>
+                    <div style={{ textAlign: 'right' }}>
+                      <p style={{ fontWeight: '700', fontSize: '1.125rem', color: 'var(--color-text)' }}>
                         ${parseFloat(order.total_amount).toFixed(2)}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p style={{ fontSize: '0.875rem', color: 'var(--color-text-light)' }}>
                         {order.items?.length || 0} item(s)
                       </p>
                     </div>
-                    <div className="text-gray-400">
+                    <div style={{ color: 'var(--color-text-light)' }}>
                       {isExpanded ? (
-                        <ChevronUp className="h-5 w-5" />
+                        <ChevronUp style={{ width: '20px', height: '20px' }} />
                       ) : (
-                        <ChevronDown className="h-5 w-5" />
+                        <ChevronDown style={{ width: '20px', height: '20px' }} />
                       )}
                     </div>
                   </div>
@@ -142,23 +154,25 @@ export default function Orders() {
 
               {/* Order Details (Expanded) */}
               {isExpanded && (
-                <div className="order-details animate-fade-in">
-                  <h4 className="font-medium text-gray-900 mb-4">Order Items</h4>
-                  <div className="space-y-3">
+                <div className="order-details fade-in">
+                  <h4 style={{ fontWeight: '500', color: 'var(--color-text)', marginBottom: 'var(--spacing-md)' }}>
+                    Order Items
+                  </h4>
+                  <div>
                     {order.items?.map((item) => (
                       <div key={item.id} className="order-item">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center flex-shrink-0">
-                            <Package className="h-6 w-6 text-indigo-400" />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)' }}>
+                          <div className="order-item-icon">
+                            <Package style={{ width: '24px', height: '24px', color: 'white' }} />
                           </div>
                           <div>
-                            <p className="font-medium text-gray-900">{item.product_name}</p>
-                            <p className="text-sm text-gray-500">
+                            <p style={{ fontWeight: '500', color: 'var(--color-text)' }}>{item.product_name}</p>
+                            <p style={{ fontSize: '0.875rem', color: 'var(--color-text-light)' }}>
                               ${parseFloat(item.price).toFixed(2)} × {item.quantity}
                             </p>
                           </div>
                         </div>
-                        <p className="font-semibold text-gray-900">
+                        <p style={{ fontWeight: '600', color: 'var(--color-text)' }}>
                           ${(parseFloat(item.price) * item.quantity).toFixed(2)}
                         </p>
                       </div>
@@ -166,23 +180,24 @@ export default function Orders() {
                   </div>
 
                   {canCancel && (
-                    <div className="mt-6 pt-5 border-t border-gray-200">
+                    <div style={{ marginTop: 'var(--spacing-lg)', paddingTop: 'var(--spacing-md)', borderTop: '1px solid var(--color-border)' }}>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleCancel(order.id);
                         }}
                         disabled={cancelling[order.id]}
-                        className="btn btn-danger btn-sm btn-inline"
+                        className="btn btn-danger btn-small"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                       >
                         {cancelling[order.id] ? (
                           <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            <Loader2 style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} />
                             Cancelling...
                           </>
                         ) : (
                           <>
-                            <Ban className="h-4 w-4 mr-2" />
+                            <Ban style={{ width: '16px', height: '16px' }} />
                             Cancel Order
                           </>
                         )}

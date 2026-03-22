@@ -6,26 +6,26 @@ export default function Home() {
   const { isAuthenticated } = useAuth();
 
   return (
-    <div className="animate-fade-in-up">
+    <div className="fade-in">
       {/* Hero Section */}
       <div className="hero">
         <div className="hero-icon">
-          <Store className="h-12 w-12 sm:h-14 sm:w-14 text-indigo-600" />
+          <Store />
         </div>
         <h1 className="hero-title">
-          Welcome to <span className="text-indigo-600">AmCart</span>
+          Welcome to <span style={{ color: 'var(--color-accent)' }}>AmCart</span>
         </h1>
         <p className="hero-description">
           Your one-stop shop for amazing products. Fast checkout, secure payments, and great prices — all in one place.
         </p>
         <div className="hero-actions">
-          <Link to="/products" className="btn btn-primary btn-lg btn-inline">
-            <ShoppingBag className="h-5 w-5 mr-2" />
+          <Link to="/products" className="btn btn-large btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+            <ShoppingBag style={{ width: '20px', height: '20px' }} />
             Browse Products
-            <ArrowRight className="h-5 w-5 ml-2" />
+            <ArrowRight style={{ width: '20px', height: '20px' }} />
           </Link>
           {!isAuthenticated && (
-            <Link to="/register" className="btn btn-secondary btn-lg btn-inline">
+            <Link to="/register" className="btn btn-large btn-secondary" style={{ display: 'inline-flex', alignItems: 'center' }}>
               Create Account
             </Link>
           )}
@@ -33,18 +33,18 @@ export default function Home() {
       </div>
 
       {/* Features Section */}
-      <div className="section">
-        <div className="text-center mb-10">
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">Why choose AmCart?</h2>
-          <p className="text-gray-600 max-w-xl mx-auto">
+      <div style={{ marginBottom: 'var(--spacing-2xl)' }}>
+        <div className="text-center" style={{ marginBottom: 'var(--spacing-xl)' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: 'var(--spacing-sm)' }}>Why choose AmCart?</h2>
+          <p style={{ color: 'var(--color-text-light)', maxWidth: '600px', margin: '0 auto' }}>
             We make shopping simple, fast, and secure. Here's what sets us apart.
           </p>
         </div>
 
         <div className="features-grid">
-          <div className="feature-card card-hover">
-            <div className="feature-icon bg-emerald-100">
-              <Truck className="h-7 w-7 text-emerald-600" />
+          <div className="feature-card">
+            <div className="feature-icon" style={{ backgroundColor: '#d1fae5' }}>
+              <Truck style={{ width: '28px', height: '28px', color: '#059669' }} />
             </div>
             <h3 className="feature-title">Free Shipping</h3>
             <p className="feature-description">
@@ -52,9 +52,9 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="feature-card card-hover">
-            <div className="feature-icon bg-blue-100">
-              <Shield className="h-7 w-7 text-blue-600" />
+          <div className="feature-card">
+            <div className="feature-icon" style={{ backgroundColor: '#dbeafe' }}>
+              <Shield style={{ width: '28px', height: '28px', color: '#2563eb' }} />
             </div>
             <h3 className="feature-title">Secure Shopping</h3>
             <p className="feature-description">
@@ -62,9 +62,9 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="feature-card card-hover">
-            <div className="feature-icon bg-purple-100">
-              <CreditCard className="h-7 w-7 text-purple-600" />
+          <div className="feature-card">
+            <div className="feature-icon" style={{ backgroundColor: '#e9d5ff' }}>
+              <CreditCard style={{ width: '28px', height: '28px', color: '#9333ea' }} />
             </div>
             <h3 className="feature-title">Easy Payments</h3>
             <p className="feature-description">
@@ -75,23 +75,37 @@ export default function Home() {
       </div>
 
       {/* CTA Section */}
-      <div className="section">
-        <div className="cta">
-          <div className="flex justify-center mb-4">
-            <Sparkles className="h-8 w-8 text-indigo-200" />
-          </div>
-          <h2 className="cta-title">Ready to start shopping?</h2>
-          <p className="cta-description">
-            Join thousands of happy customers and discover our amazing product selection today.
-          </p>
-          <Link 
-            to="/products" 
-            className="btn bg-white text-indigo-600 hover:bg-indigo-50 btn-lg btn-inline shadow-lg"
-          >
-            Shop Now
-            <ArrowRight className="h-5 w-5 ml-2" />
-          </Link>
+      <div style={{ 
+        backgroundColor: 'var(--color-accent)', 
+        padding: 'var(--spacing-2xl)', 
+        borderRadius: 'var(--radius-lg)',
+        textAlign: 'center',
+        boxShadow: 'var(--shadow-lg)'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--spacing-md)' }}>
+          <Sparkles style={{ width: '32px', height: '32px', color: 'rgba(255, 255, 255, 0.8)' }} />
         </div>
+        <h2 style={{ fontSize: '1.75rem', fontWeight: '700', color: 'white', marginBottom: 'var(--spacing-sm)' }}>
+          Ready to start shopping?
+        </h2>
+        <p style={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: '1.0625rem', marginBottom: 'var(--spacing-lg)', maxWidth: '500px', margin: '0 auto var(--spacing-lg)' }}>
+          Join thousands of happy customers and discover our amazing product selection today.
+        </p>
+        <Link 
+          to="/products" 
+          className="btn btn-large"
+          style={{ 
+            backgroundColor: 'white', 
+            color: 'var(--color-accent)', 
+            display: 'inline-flex', 
+            alignItems: 'center', 
+            gap: '8px',
+            boxShadow: 'var(--shadow-lg)'
+          }}
+        >
+          Shop Now
+          <ArrowRight style={{ width: '20px', height: '20px' }} />
+        </Link>
       </div>
     </div>
   );

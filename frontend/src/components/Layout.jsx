@@ -4,13 +4,13 @@ import { Toaster } from 'react-hot-toast';
 
 export default function Layout() {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="app-container">
       <Navbar />
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+      <main className="main-content">
         <Outlet />
       </main>
-      <footer className="border-t border-gray-200 bg-white py-6 mt-auto">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
+      <footer className="footer">
+        <div className="footer-content">
           © 2026 AmCart. All rights reserved.
         </div>
       </footer>
