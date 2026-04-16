@@ -19,11 +19,13 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle 401 errors
+// Handle 401 errors (skip auth endpoints so login/register can handle their own errors)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const url = error.config?.url || '';
+    const isAuthEndpoint = url.includes('/auth/login') || url.includes('/auth/register');
+    if (error.response?.status === 401 && !isAuthEndpoint) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
@@ -34,17 +36,18 @@ api.interceptors.response.use(
 
 // Auth API
 export const authAPI = {
-  register: (email, password) =>
-    api.post('/auth/register', { email, password }),
+  register: (email, password, fullName, phone) =>
+    api.post('/auth/register', { email, password, full_name: fullName, phone }),
   login: (email, password) =>
     api.post('/auth/login', { email, password }),
   getMe: () => api.get('/auth/me'),
+  updateProfile: (data) => api.put('/auth/profile', data),
+  seedAdmin: () => api.post('/auth/admin/seed'),
 };
 
 // Products API
 export const productsAPI = {
-  getAll: (skip = 0, limit = 10) =>
-    api.get(`/products/?skip=${skip}&limit=${limit}`),
+  getAll: (params = {}) => api.get('/products/', { params }),
   getById: (id) => api.get(`/products/${id}`),
   getStock: (id) => api.get(`/products/${id}/stock`),
 };
@@ -56,14 +59,41 @@ export const cartAPI = {
     api.post('/cart/add', { product_id: productId, quantity }),
   remove: (productId) => api.delete(`/cart/remove/${productId}`),
   clear: () => api.delete('/cart/clear'),
+  update: (productId, quantity) => api.put(`/cart/update/${productId}?quantity=${quantity}`),
 };
 
 // Orders API
 export const ordersAPI = {
-  checkout: () => api.post('/orders/checkout'),
+  checkout: (shippingData) => api.post('/orders/checkout', shippingData || {}),
   getAll: () => api.get('/orders/'),
   getById: (id) => api.get(`/orders/${id}`),
   cancel: (id) => api.post(`/orders/${id}/cancel`),
+};
+
+// Wishlist API
+export const wishlistAPI = {
+  get: () => api.get('/wishlist/'),
+  add: (productId) => api.post('/wishlist/add', { product_id: productId }),
+  remove: (productId) => api.delete(`/wishlist/remove/${productId}`),
+};
+
+// Reviews API
+export const reviewAPI = {
+  getByProduct: (productId, skip = 0, limit = 20) =>
+    api.get(`/reviews/product/${productId}`, { params: { skip, limit } }),
+  getAll: (skip = 0, limit = 20) => api.get('/reviews/', { params: { skip, limit } }),
+  create: (productId, rating, comment) =>
+    api.post('/reviews/', { product_id: productId, rating, comment }),
+};
+
+// Admin API
+export const adminAPI = {
+  getProducts: (page = 1, limit = 50) =>
+    api.get('/admin/products/', { params: { page, limit } }),
+  createProduct: (data) => api.post('/admin/products/', data),
+  updateProduct: (id, data) => api.put(`/admin/products/${id}`, data),
+  deleteProduct: (id) => api.delete(`/admin/products/${id}`),
+  updateStock: (id, quantity) => api.put(`/admin/products/${id}/stock`, { quantity }),
 };
 
 export default api;

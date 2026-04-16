@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 from app.database import get_db
 from app.models.user import User
-from app.schemas.cart import OrderResponse, OrderListResponse, OrderItemResponse
+from app.schemas.cart import OrderResponse, OrderListResponse, OrderItemResponse, CheckoutRequest
 from app.services.auth import get_current_user
 from app.services.order import order_service
 
@@ -13,34 +13,20 @@ router = APIRouter(prefix="/orders", tags=["Orders"])
 
 @router.post("/checkout", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
 def checkout(
+    checkout_data: Optional[CheckoutRequest] = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Place order from cart (Checkout)
-    
-    This endpoint:
-    1. Gets all items from user's cart
-    2. Atomically reserves stock for each item
-    3. If any item has insufficient stock, rolls back entire transaction
-    4. Creates order with PENDING status
-    5. Creates order items
-    6. Clears cart
-    7. Returns created order
-    
-    Args:
-        current_user: Current authenticated user
-        db: Database session
-    
-    Returns:
-        Created order with items
-    
-    Raises:
-        HTTPException 400: If cart is empty or insufficient stock
-        HTTPException 404: If product not found
-    """
     order = order_service.place_order(db, current_user.id)
-    
+
+    if checkout_data:
+        if checkout_data.shipping_name:
+            order.shipping_name = checkout_data.shipping_name
+        if checkout_data.shipping_address:
+            order.shipping_address = checkout_data.shipping_address
+        db.commit()
+        db.refresh(order)
+
     # Build response with order items
     items_response = []
     for item in order.items:
@@ -51,12 +37,14 @@ def checkout(
             price=item.price,
             product_name=item.product.name if item.product else None
         ))
-    
+
     return OrderResponse(
         id=order.id,
         user_id=order.user_id,
         status=order.status,
         total_amount=order.total_amount,
+        shipping_name=order.shipping_name,
+        shipping_address=order.shipping_address,
         created_at=order.created_at,
         items=items_response
     )

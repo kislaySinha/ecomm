@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { ordersAPI } from '../services/api';
-import { ShoppingCart, Trash2, Loader2, Package, ArrowRight, ShoppingBag, CheckCircle, XCircle } from 'lucide-react';
+import { ordersAPI, cartAPI } from '../services/api';
+import { ShoppingCart, Trash2, Loader2, Package, ArrowRight, ShoppingBag, CheckCircle, XCircle, Plus, Minus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Loading from '../components/Loading';
 
@@ -11,6 +11,7 @@ export default function Cart() {
   const [checkingOut, setCheckingOut] = useState(false);
   const [removing, setRemoving] = useState({});
   const [orderResult, setOrderResult] = useState(null);
+  const [updatingQty, setUpdatingQty] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -32,6 +33,19 @@ export default function Cart() {
     }
   };
 
+  const handleQtyChange = async (productId, newQty) => {
+    if (newQty <= 0) return handleRemove(productId);
+    try {
+      setUpdatingQty((prev) => ({ ...prev, [productId]: true }));
+      await cartAPI.update(productId, newQty);
+      await fetchCart();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to update quantity');
+    } finally {
+      setUpdatingQty((prev) => ({ ...prev, [productId]: false }));
+    }
+  };
+
   const handleClearCart = async () => {
     if (!window.confirm('Are you sure you want to clear your cart?')) {
       return;
@@ -50,7 +64,7 @@ export default function Cart() {
   const handleCheckout = async () => {
     try {
       setCheckingOut(true);
-      const response = await ordersAPI.checkout();
+      const response = await ordersAPI.checkout({});
       const order = response.data;
       
       // Clear cart from state after successful checkout
@@ -188,9 +202,31 @@ export default function Cart() {
               </div>
               <div className="cart-item-info">
                 <h3 className="cart-item-name">{item.product_name}</h3>
-                <p className="cart-item-description">
-                  ${parseFloat(item.product_price).toFixed(2)} × {item.quantity}
+                <p className="cart-item-description" style={{ marginBottom: 'var(--spacing-xs)' }}>
+                  ${parseFloat(item.product_price).toFixed(2)} each
                 </p>
+                {/* Qty +/- controls */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <button
+                    onClick={() => handleQtyChange(item.product_id, item.quantity - 1)}
+                    disabled={updatingQty[item.product_id] || removing[item.product_id]}
+                    className="btn-icon"
+                    style={{ width: '28px', height: '28px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <Minus style={{ width: '12px', height: '12px' }} />
+                  </button>
+                  <span style={{ minWidth: '24px', textAlign: 'center', fontWeight: '600', fontSize: '0.95rem' }}>
+                    {updatingQty[item.product_id] ? <Loader2 style={{ width: '14px', height: '14px', animation: 'spin 1s linear infinite' }} /> : item.quantity}
+                  </span>
+                  <button
+                    onClick={() => handleQtyChange(item.product_id, item.quantity + 1)}
+                    disabled={updatingQty[item.product_id] || removing[item.product_id]}
+                    className="btn-icon"
+                    style={{ width: '28px', height: '28px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <Plus style={{ width: '12px', height: '12px' }} />
+                  </button>
+                </div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <p className="cart-item-price">

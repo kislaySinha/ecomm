@@ -2,10 +2,10 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from app.database import engine, Base, get_db
-from app.routers import auth_router, product_router, cart_router, order_router, payment_router
+from app.routers import auth_router, product_router, cart_router, order_router, payment_router, admin_router, wishlist_router, review_router
 
 # Import models to ensure they are registered with Base
-from app.models import User, Product, Inventory, CartItem, Order, OrderItem
+from app.models import User, Product, Inventory, CartItem, Order, OrderItem, Wishlist, Review
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -68,3 +68,6 @@ app.include_router(product_router)
 app.include_router(cart_router)
 app.include_router(order_router)
 app.include_router(payment_router)
+app.include_router(admin_router)
+app.include_router(wishlist_router)
+app.include_router(review_router)

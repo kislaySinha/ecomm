@@ -15,6 +15,8 @@ class Order(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     status = Column(String(50), nullable=False, default="PENDING", index=True)
     total_amount = Column(Numeric(10, 2), nullable=False, default=0)
+    shipping_name = Column(String(255), nullable=True)
+    shipping_address = Column(String(500), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 

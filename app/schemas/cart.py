@@ -55,6 +55,11 @@ class OrderItemResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class CheckoutRequest(BaseModel):
+    shipping_name: Optional[str] = None
+    shipping_address: Optional[str] = None
+
+
 class OrderResponse(BaseModel):
     """
     Schema for order response
@@ -63,6 +68,8 @@ class OrderResponse(BaseModel):
     user_id: int
     status: str
     total_amount: Decimal
+    shipping_name: Optional[str] = None
+    shipping_address: Optional[str] = None
     created_at: datetime
     items: List[OrderItemResponse]
 

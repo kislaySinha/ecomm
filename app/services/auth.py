@@ -63,7 +63,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return encoded_jwt
 
 
-def create_user(db: Session, email: str, password: str) -> User:
+def create_user(db: Session, email: str, password: str, full_name: str = None, phone: str = None) -> User:
     """
     Create a new user with hashed password
     
@@ -71,6 +71,8 @@ def create_user(db: Session, email: str, password: str) -> User:
         db: Database session
         email: User email
         password: Plain text password
+        full_name: Optional full name
+        phone: Optional phone number
     
     Returns:
         Created user object
@@ -88,7 +90,7 @@ def create_user(db: Session, email: str, password: str) -> User:
     
     # Create new user with hashed password
     hashed_password = get_password_hash(password)
-    db_user = User(email=email, hashed_password=hashed_password)
+    db_user = User(email=email, hashed_password=hashed_password, full_name=full_name, phone=phone)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -152,3 +154,14 @@ async def get_current_user(
         raise credentials_exception
     
     return user
+
+
+async def get_current_admin_user(
+    current_user: User = Depends(get_current_user)
+) -> User:
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin privileges required"
+        )
+    return current_user

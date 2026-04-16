@@ -1,0 +1,224 @@
+%%{init: {'theme': 'base', 'themeVariables': {'fontSize': '14px', 'primaryColor': '#dbeafe', 'primaryBorderColor': '#2563eb', 'lineColor': '#64748b', 'secondaryColor': '#f1f5f9', 'tertiaryColor': '#f8fafc'}}}%%
+
+flowchart TB
+
+%% ========== CLIENTS ==========
+    C1([👤 Browser])
+    C2([📱 Mobile])
+
+%% ========== EDGE LAYER ==========
+    subgraph EDGE["🛡️ Edge Layer"]
+        direction LR
+        WAF["WAF + DDoS\nAWS Shield"]
+        CDN["CloudFront\nCDN"]
+        S3FE["S3 Bucket\nReact Frontend"]
+    end
+
+%% ========== API GATEWAY ==========
+    subgraph APIGW["🚪 API Gateway Layer"]
+        direction LR
+        ALB["Application\nLoad Balancer"]
+        GW1["Gateway #1\nRate Limit · Routing"]
+        GW2["Gateway #2\nRate Limit · Routing"]
+        TokenRedis[("🔑 Redis\nJWT Blacklist")]
+    end
+
+%% ========== SERVICES ROW 1 ==========
+    subgraph AUTH["👤 Auth Service"]
+        AuthSvc["Auth Service\nJWT · OAuth"]
+        AuthDB[("User DB\nPostgreSQL")]
+    end
+
+    subgraph SEARCH["🔍 Search Service"]
+        SearchSvc["Search Service"]
+        SearchRedis[("Redis\nQuery Cache")]
+        Elastic[("Elasticsearch\nProduct Index")]
+    end
+
+    subgraph PRODUCT["📦 Product Service"]
+        ProdSvc["Product Service\nCRUD · Categories"]
+        ProdDB[("Product DB\nPostgreSQL")]
+        ProdReplica[("Read\nReplica")]
+        S3Img["S3\nImages"]
+    end
+
+    subgraph ADMIN["🔧 Admin"]
+        AdminSvc["Admin Service\nDashboard API"]
+    end
+
+%% ========== SERVICES ROW 2 ==========
+    subgraph CART["🛒 Cart Service"]
+        CartSvc["Cart Service\nSession Carts"]
+        CartRedis[("Redis\nCart Store")]
+    end
+
+    subgraph CHECKOUT["✅ Checkout — Saga Orchestrator"]
+        direction TB
+        CoSvc["Checkout\nOrchestrator"]
+        IdempRedis[("Redis\nIdempotency")]
+        LockRedis[("Redis Lock\nper SKU · TTL 10s")]
+    end
+
+    subgraph ORDER["📋 Order Service"]
+        OrderSvc["Order Service\nCreate · Status"]
+        OrderDB[("Order DB\nPostgreSQL")]
+        OrderReplica[("Read\nReplica")]
+    end
+
+%% ========== SERVICES ROW 3 ==========
+    subgraph INVENTORY["📊 Inventory Service"]
+        InvSvc["Inventory Service\nStock Management"]
+        InvRedis[("Redis\nWrite-Through")]
+        InvDB[("Inventory DB\nPostgreSQL")]
+    end
+
+    subgraph PAYMENT["💳 Payment Service"]
+        PaySvc["Payment Service\nIdempotent Charges"]
+        PayDB[("Payment DB\nPostgreSQL")]
+        PayGW["Stripe / PayPal\nExternal Gateway"]
+    end
+
+    subgraph NOTIF["📧 Notification Service"]
+        NotifSvc["Notification\nService"]
+        EmailCh["📨 SendGrid\nEmail"]
+        SMSCh["📱 Twilio\nSMS"]
+    end
+
+%% ========== KAFKA ==========
+    subgraph KAFKA["📡 Apache Kafka — Event Bus"]
+        direction LR
+        T_ORD[[order.created]]
+        T_PAY_OK[[payment.succeeded]]
+        T_PAY_FAIL[[payment.failed]]
+        T_INV[[inventory.updated]]
+        T_COMP[[checkout.compensate]]
+        T_DLQ[[☠️ Dead Letter Queue]]
+    end
+
+%% ========== CONSUMERS ==========
+    subgraph CONSUMERS["⚙️ Kafka Consumers"]
+        direction LR
+        StockC["Stock\nConsumer"]
+        CartC["Cart Clear\nConsumer"]
+        NotifC["Notification\nConsumer"]
+        CDCC["CDC\nES Sync"]
+    end
+
+%% ========== OBSERVABILITY ==========
+    subgraph OBS["📈 Observability"]
+        direction LR
+        Jaeger["Jaeger\nTracing"]
+        Prom["Prometheus\n+ Grafana"]
+        ELK["ELK Stack\nLogs"]
+    end
+
+
+%% ==========================================
+%% CONNECTIONS
+%% ==========================================
+
+%% --- Client → Edge ---
+    C1 & C2 -->|HTTPS| WAF
+    WAF --> CDN
+    CDN -->|static| S3FE
+    CDN -->|API calls| ALB
+
+%% --- Gateway ---
+    ALB --> GW1 & GW2
+    GW1 & GW2 <-..->|validate / blacklist| TokenRedis
+
+%% --- Gateway → Services ---
+    GW1 & GW2 --> AuthSvc
+    GW1 & GW2 --> SearchSvc
+    GW1 & GW2 --> ProdSvc
+    GW1 & GW2 --> AdminSvc
+    GW1 & GW2 --> CartSvc
+    GW1 & GW2 --> CoSvc
+    GW1 & GW2 --> OrderSvc
+
+%% --- Auth ---
+    AuthSvc --> AuthDB
+
+%% --- Search ---
+    SearchSvc --> SearchRedis
+    SearchSvc --> Elastic
+
+%% --- Product ---
+    ProdSvc --> ProdDB
+    ProdSvc -.->|read| ProdReplica
+    ProdSvc --> S3Img
+    AdminSvc -->|CRUD| ProdSvc
+
+%% --- Cart ---
+    CartSvc --> CartRedis
+
+%% --- Checkout Saga Steps ---
+    CoSvc --> IdempRedis
+    CoSvc -->|"① Lock"| LockRedis
+    CoSvc -->|"② Reserve Stock"| InvSvc
+    CoSvc -->|"③ Create Order"| OrderSvc
+    CoSvc -->|"④ Charge"| PaySvc
+    CoSvc -->|"⑤ Clear Cart"| CartSvc
+
+%% --- Saga Compensation ---
+    CoSvc -->|"⚠️ Rollback"| T_COMP
+    T_COMP --> StockC
+    T_COMP --> CartC
+
+%% --- Order ---
+    OrderSvc --> OrderDB
+    OrderSvc -.->|read| OrderReplica
+    OrderSvc --> T_ORD
+
+%% --- Inventory ---
+    InvSvc --> InvRedis
+    InvSvc --> InvDB
+
+%% --- Payment ---
+    PaySvc --> PayDB
+    PaySvc -->|charge| PayGW
+    PaySvc -->|✅ success| T_PAY_OK
+    PaySvc -->|❌ failure| T_PAY_FAIL
+
+%% --- Inventory events ---
+    InvSvc --> T_INV
+
+%% --- DLQ fallback ---
+    T_ORD & T_PAY_OK & T_PAY_FAIL & T_INV -.->|on failure| T_DLQ
+
+%% --- Consumers subscribe ---
+    T_PAY_OK --> StockC & CartC & NotifC
+    T_PAY_FAIL --> NotifC
+    T_INV --> CDCC
+
+%% --- Consumers → Services ---
+    StockC -->|update qty| InvSvc
+    CartC -->|clear cart| CartSvc
+    NotifC --> NotifSvc
+    CDCC -->|sync index| Elastic
+
+%% --- Notifications ---
+    NotifSvc --> EmailCh & SMSCh
+
+%% --- Observability (all services report via sidecar agents, not shown for clarity) ---
+
+
+%% ==========================================
+%% STYLES
+%% ==========================================
+    classDef svc fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#1e3a8a
+    classDef db fill:#fef9c3,stroke:#ca8a04,stroke-width:2px,color:#713f12
+    classDef cache fill:#ffedd5,stroke:#ea580c,stroke-width:2px,color:#7c2d12
+    classDef kafka fill:#d1fae5,stroke:#059669,stroke-width:2px,color:#064e3b
+    classDef edge fill:#f3e8ff,stroke:#7c3aed,stroke-width:2px,color:#3b0764
+    classDef obs fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:#7f1d1d
+    classDef ext fill:#e2e8f0,stroke:#475569,stroke-width:2px,color:#1e293b
+
+    class AuthSvc,SearchSvc,ProdSvc,AdminSvc,CartSvc,CoSvc,OrderSvc,InvSvc,PaySvc,NotifSvc svc
+    class AuthDB,ProdDB,ProdReplica,OrderDB,OrderReplica,InvDB,PayDB db
+    class TokenRedis,SearchRedis,CartRedis,IdempRedis,LockRedis,InvRedis cache
+    class T_ORD,T_PAY_OK,T_PAY_FAIL,T_INV,T_COMP,T_DLQ kafka
+    class WAF,CDN,ALB,GW1,GW2,S3FE edge
+    class Jaeger,Prom,ELK obs
+    class PayGW,EmailCh,SMSCh,S3Img ext
+    class StockC,CartC,NotifC,CDCC svc

@@ -1,9 +1,28 @@
 import { Link } from 'react-router-dom';
-import { ShoppingBag, Truck, Shield, CreditCard, Store, ArrowRight, Sparkles } from 'lucide-react';
+import { ShoppingBag, Truck, Shield, CreditCard, Store, ArrowRight, Sparkles, Star, Package } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useState, useEffect } from 'react';
+import { productsAPI } from '../services/api';
+
+const TESTIMONIALS = [
+  { name: 'Sarah M.', rating: 5, text: 'Amazing products and super fast delivery! AmCart is my go-to shop now.' },
+  { name: 'James T.', rating: 5, text: 'Great prices and easy checkout. Highly recommend to everyone!' },
+  { name: 'Elena R.', rating: 4, text: 'Love the variety of products. The website is very easy to navigate.' },
+];
 
 export default function Home() {
   const { isAuthenticated } = useAuth();
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [newProducts, setNewProducts] = useState([]);
+
+  useEffect(() => {
+    productsAPI.getAll({ is_featured: true, limit: 4 })
+      .then((res) => setFeaturedProducts(res.data.products || []))
+      .catch(() => {});
+    productsAPI.getAll({ is_new: true, limit: 4 })
+      .then((res) => setNewProducts(res.data.products || []))
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="fade-in">
@@ -106,6 +125,80 @@ export default function Home() {
           Shop Now
           <ArrowRight style={{ width: '20px', height: '20px' }} />
         </Link>
+      </div>
+
+      {/* Featured Products */}
+      {featuredProducts.length > 0 && (
+        <div style={{ marginBottom: 'var(--spacing-2xl)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-lg)' }}>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: '700' }}>Featured Products</h2>
+            <Link to="/products" style={{ color: 'var(--color-accent)', fontSize: '0.9rem', fontWeight: '500' }}>View All →</Link>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 'var(--spacing-md)' }}>
+            {featuredProducts.map((p) => (
+              <Link key={p.id} to={`/products/${p.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                <div className="product-card" style={{ cursor: 'pointer' }}>
+                  <div className="product-image" style={{ height: '160px' }}>
+                    {p.image_url ? <img src={p.image_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Package />}
+                  </div>
+                  <div className="product-info">
+                    <h3 className="product-name" style={{ fontSize: '0.95rem' }}>{p.name}</h3>
+                    <span className="product-price">${parseFloat(p.price).toFixed(2)}</span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* New Products */}
+      {newProducts.length > 0 && (
+        <div style={{ marginBottom: 'var(--spacing-2xl)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-lg)' }}>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: '700' }}>New Arrivals</h2>
+            <Link to="/products?is_new=true" style={{ color: 'var(--color-accent)', fontSize: '0.9rem', fontWeight: '500' }}>View All →</Link>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 'var(--spacing-md)' }}>
+            {newProducts.map((p) => (
+              <Link key={p.id} to={`/products/${p.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                <div className="product-card" style={{ cursor: 'pointer', position: 'relative' }}>
+                  <span style={{ position: 'absolute', top: '8px', left: '8px', zIndex: 1, backgroundColor: '#10b981', color: 'white', padding: '2px 8px', borderRadius: 'var(--radius-sm)', fontWeight: '700', fontSize: '0.7rem' }}>NEW</span>
+                  <div className="product-image" style={{ height: '160px' }}>
+                    {p.image_url ? <img src={p.image_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Package />}
+                  </div>
+                  <div className="product-info">
+                    <h3 className="product-name" style={{ fontSize: '0.95rem' }}>{p.name}</h3>
+                    <span className="product-price">${parseFloat(p.price).toFixed(2)}</span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Testimonials */}
+      <div style={{ marginBottom: 'var(--spacing-2xl)' }}>
+        <div className="text-center" style={{ marginBottom: 'var(--spacing-xl)' }}>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: '700', marginBottom: 'var(--spacing-sm)' }}>What Our Customers Say</h2>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 'var(--spacing-lg)' }}>
+          {TESTIMONIALS.map((t, i) => (
+            <div key={i} style={{ backgroundColor: 'var(--color-surface)', borderRadius: 'var(--radius-lg)', padding: 'var(--spacing-lg)', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-md)' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '50%', backgroundColor: 'var(--color-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '700' }}>
+                  {t.name[0]}
+                </div>
+                <div>
+                  <div style={{ fontWeight: '600', fontSize: '0.9rem' }}>{t.name}</div>
+                  <span style={{ color: '#f59e0b' }}>{'★'.repeat(t.rating)}{'☆'.repeat(5 - t.rating)}</span>
+                </div>
+              </div>
+              <p style={{ margin: 0, color: 'var(--color-text-light)', fontSize: '0.9rem', lineHeight: '1.5', fontStyle: 'italic' }}>"{t.text}"</p>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

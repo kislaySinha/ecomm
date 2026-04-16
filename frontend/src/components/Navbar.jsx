@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, User, LogOut, Package, Store, Menu, X } from 'lucide-react';
+import { ShoppingCart, User, LogOut, Package, Store, Menu, X, Heart, Tag, Phone, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useState } from 'react';
@@ -34,6 +34,17 @@ export default function Navbar() {
               Products
             </Link>
           </li>
+          <li>
+            <Link to="/sale" className="navbar-link" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#ef4444' }}>
+              <Tag style={{ width: '14px', height: '14px' }} />
+              Sale
+            </Link>
+          </li>
+          <li>
+            <Link to="/contact" className="navbar-link">
+              Contact
+            </Link>
+          </li>
 
           {isAuthenticated ? (
             <>
@@ -41,6 +52,12 @@ export default function Navbar() {
                 <Link to="/orders" className="navbar-link" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <Package style={{ width: '16px', height: '16px' }} />
                   Orders
+                </Link>
+              </li>
+
+              <li className="cart-badge">
+                <Link to="/wishlist" className="navbar-link" title="Wishlist">
+                  <Heart style={{ width: '20px', height: '20px' }} />
                 </Link>
               </li>
 
@@ -55,11 +72,20 @@ export default function Navbar() {
                 </Link>
               </li>
 
+              {user?.is_admin && (
+                <li>
+                  <Link to="/admin/products" className="navbar-link" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--color-accent)', fontWeight: '600' }}>
+                    <Shield style={{ width: '14px', height: '14px' }} />
+                    Admin
+                  </Link>
+                </li>
+              )}
+
               <li className="navbar-user">
-                <div className="navbar-user-info">
+                <Link to="/profile" className="navbar-user-info" style={{ textDecoration: 'none', color: 'inherit' }}>
                   <User style={{ width: '16px', height: '16px' }} />
-                  <span>{user?.email?.split('@')[0]}</span>
-                </div>
+                  <span>{user?.full_name?.split(' ')[0] || user?.email?.split('@')[0]}</span>
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="btn-icon"

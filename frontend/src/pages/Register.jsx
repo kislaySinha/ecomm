@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, Loader2, Store, UserPlus } from 'lucide-react';
+import { Mail, Lock, Loader2, Store, UserPlus, User, Phone } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -32,7 +34,7 @@ export default function Register() {
 
     try {
       setLoading(true);
-      await register(email, password);
+      await register(email, password, fullName, phone);
       toast.success('Account created successfully!');
       navigate('/products');
     } catch (error) {
@@ -66,6 +68,36 @@ export default function Register() {
         </div>
 
         <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label className="form-label">Full Name <span style={{ color: 'var(--color-text-light)', fontSize: '0.8rem' }}>(optional)</span></label>
+            <div className="form-input-icon-wrapper">
+              <User className="form-input-icon" />
+              <input
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="form-input form-input-with-icon"
+                placeholder="Your full name"
+                disabled={loading}
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Phone <span style={{ color: 'var(--color-text-light)', fontSize: '0.8rem' }}>(optional)</span></label>
+            <div className="form-input-icon-wrapper">
+              <Phone className="form-input-icon" />
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="form-input form-input-with-icon"
+                placeholder="+1 234 567 8900"
+                disabled={loading}
+              />
+            </div>
+          </div>
+
           <div className="form-group">
             <label className="form-label">Email address</label>
             <div className="form-input-icon-wrapper">
