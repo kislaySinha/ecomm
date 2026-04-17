@@ -1,0 +1,19 @@
+# Copy this file to terraform.tfvars and fill in your values
+# Never commit terraform.tfvars to git (it contains secrets)
+
+aws_region  = "us-east-1"
+project     = "amcart"
+environment = "prod"
+
+# RDS credentials
+db_username = "amcart_admin"
+db_password = "YourStrongPassword123"   # min 8 chars, avoid @#/ in password
+
+# JWT secret — must match what services use locally
+jwt_secret_key = "amcart-secret-key-change-in-production"
+
+# Your current public IP for RDS access during terraform apply
+# Run: curl -s https://checkip.amazonaws.com
+# Then set: rds_allowed_cidr = "1.2.3.4/32"
+# Leave commented out to auto-detect
+# rds_allowed_cidr = "1.2.3.4/32"

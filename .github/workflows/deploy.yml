@@ -1,0 +1,116 @@
+name: Deploy to AWS
+
+on:
+  push:
+    branches: [main]
+
+env:
+  AWS_REGION: us-east-1
+  ACCOUNT_ID: 877092167224
+  ECS_CLUSTER: amcart-cluster
+
+jobs:
+  # ── Backend: build images → push ECR → redeploy ECS ─────────────
+  backend:
+    name: Deploy ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: auth-service
+            context: ./services/auth-service
+            ecs_service: amcart-auth
+          - service: product-service
+            context: ./services/product-service
+            ecs_service: amcart-product
+          - service: search-service
+            context: ./services/search-service
+            ecs_service: amcart-search
+          - service: legacy-app
+            context: .
+            ecs_service: amcart-legacy
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push ${{ matrix.service }}
+        env:
+          REPO: ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/amcart/${{ matrix.service }}
+        run: |
+          docker build \
+            -t $REPO:latest \
+            -t $REPO:${{ github.sha }} \
+            ${{ matrix.context }}
+          docker push $REPO:latest
+          docker push $REPO:${{ github.sha }}
+
+      - name: Force ECS redeploy — ${{ matrix.ecs_service }}
+        run: |
+          aws ecs update-service \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --service ${{ matrix.ecs_service }} \
+            --force-new-deployment \
+            --no-cli-pager
+
+      - name: Wait for ${{ matrix.ecs_service }} to stabilise
+        run: |
+          aws ecs wait services-stable \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --services ${{ matrix.ecs_service }}
+
+  # ── Frontend: build React → sync S3 → invalidate CloudFront ─────
+  frontend:
+    name: Deploy Frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build
+        working-directory: frontend
+        run: VITE_API_URL="" npm run build
+
+      - name: Sync to S3
+        run: |
+          aws s3 sync frontend/dist/ s3://amcart-frontend-${{ env.ACCOUNT_ID }} \
+            --delete \
+            --region ${{ env.AWS_REGION }}
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id E3GV2D3F8VDA1Q \
+            --paths "/*" \
+            --query 'Invalidation.Id' \
+            --output text

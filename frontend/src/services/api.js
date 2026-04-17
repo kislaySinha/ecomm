@@ -96,4 +96,9 @@ export const adminAPI = {
   updateStock: (id, quantity) => api.put(`/admin/products/${id}/stock`, { quantity }),
 };
 
+// Search Service API — dedicated microservice at /search/
+export const searchAPI = {
+  search: (params = {}) => api.get('/search/', { params }),
+};
+
 export default api;

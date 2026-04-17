@@ -1,33 +1,96 @@
 version: '3.8'
 
+x-common-env: &common-env
+  SECRET_KEY: "amcart-secret-key-change-in-production"
+  ALGORITHM: "HS256"
+  ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+
 services:
-  # PostgreSQL Database Service
+  # ─── Database ───────────────────────────────────────────────────
   postgres:
     image: postgres:15-alpine
     container_name: amcart_postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: amcart
+      POSTGRES_DB: amcart          # legacy monolith database
     ports:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # FastAPI Application Service
-  app:
+  # ─── Auth Service ────────────────────────────────────────────────
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    container_name: amcart_auth
+    ports:
+      - "8001:8001"
+    environment:
+      <<: *common-env
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/amcart_auth
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./services/auth-service/app:/app/app
+    restart: unless-stopped
+
+  # ─── Product Service ─────────────────────────────────────────────
+  product-service:
+    build:
+      context: ./services/product-service
+      dockerfile: Dockerfile
+    container_name: amcart_products
+    ports:
+      - "8002:8002"
+    environment:
+      <<: *common-env
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/amcart_products
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./services/product-service/app:/app/app
+    restart: unless-stopped
+
+  # ─── Search Service ──────────────────────────────────────────────
+  search-service:
+    build:
+      context: ./services/search-service
+      dockerfile: Dockerfile
+    container_name: amcart_search
+    ports:
+      - "8003:8003"
+    environment:
+      <<: *common-env
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/amcart_products
+    depends_on:
+      postgres:
+        condition: service_healthy
+      product-service:
+        condition: service_started   # ensures schema + seed are ready first
+    volumes:
+      - ./services/search-service/app:/app/app
+    restart: unless-stopped
+
+  # ─── Legacy Monolith (cart, orders, wishlist, reviews, payment) ──
+  legacy-app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: amcart_app
+    container_name: amcart_legacy
     ports:
-      - "8000:8000"
+      - "8004:8000"
     environment:
+      <<: *common-env
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/amcart
     depends_on:
       postgres:
@@ -36,7 +99,22 @@ services:
       - ./app:/app/app
     restart: unless-stopped
 
-  # Frontend Service
+  # ─── API Gateway (nginx) ─────────────────────────────────────────
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    container_name: amcart_gateway
+    ports:
+      - "8000:80"
+    depends_on:
+      - auth-service
+      - product-service
+      - search-service
+      - legacy-app
+    restart: unless-stopped
+
+  # ─── Frontend ────────────────────────────────────────────────────
   frontend:
     build:
       context: ./frontend
@@ -45,7 +123,7 @@ services:
     ports:
       - "3000:80"
     depends_on:
-      - app
+      - api-gateway
     restart: unless-stopped
 
 volumes:
