@@ -32,10 +32,10 @@ export default function Home() {
           <Store />
         </div>
         <h1 className="hero-title">
-          Welcome to <span style={{ color: 'var(--color-accent)' }}>AmCart</span>
+          Welcome to <span style={{ color: 'var(--color-accent)' }}>AmCart</span> 🛒
         </h1>
         <p className="hero-description">
-          Your one-stop shop for amazing products. Fast checkout, secure payments, and great prices — all in one place.
+          Discover thousands of products at unbeatable prices. Fast checkout, secure payments, and doorstep delivery — shopping made effortless.
         </p>
         <div className="hero-actions">
           <Link to="/products" className="btn btn-large btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
